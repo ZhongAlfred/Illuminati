@@ -15,6 +15,7 @@ var map = [ //max: rows = 8; columns = 11;
 var x = 0;
 var y = 0;
 var illuminati;
+var moving = false;
 
  var KEYCODE_LEFT = 37,
    KEYCODE_RIGHT = 39,
@@ -92,21 +93,28 @@ function handleComplete(event) {
 }
 
 function move(direction) {
+
+	if (!moving) {
+		moving = true;
+	
+	function handleComplete() {
+		moving = false;
+	}
 	
 	if (direction == "left") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({x:illuminati.x - (100/2)}, 1000);
+		createjs.Tween.get(illuminati, {loop:false, override:true}).to({x:illuminati.x - (100/2)}, 1000).call(handleComplete);
 	}
 	else if (direction == "right") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({x:illuminati.x + (100/2)}, 1000);
+		createjs.Tween.get(illuminati, {loop:false, override:true}).to({x:illuminati.x + (100/2)}, 1000).call(handleComplete);
 	}
 	else if (direction == "up") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({y:illuminati.y - 88}, 1000);
+		createjs.Tween.get(illuminati, {loop:false, override:true}).to({y:illuminati.y - 88, scaleY:-illuminati.scaleY}, 1000).call(handleComplete);
 	}
 	else if (direction == "down") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({y:illuminati.y + 88}, 1000);
+		createjs.Tween.get(illuminati, {loop:false, override:true}).to({y:illuminati.y + 88, scaleY:-illuminati.scaleY}, 1000).call(handleComplete);
 	}
 	
-
+	}
 }
 
 
