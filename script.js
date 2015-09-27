@@ -14,8 +14,10 @@ var map = [ //max: rows = 8; columns = 11;
 
 var x = 0;
 var y = 0;
-var illuminati;
+var doge;
 var moving = false;
+var upright = true;
+var drEvil;
 
  var KEYCODE_LEFT = 37,
    KEYCODE_RIGHT = 39,
@@ -36,10 +38,22 @@ function init() {
 	{id:"Background", src:"assets/puzzlebg.jpg"},
 	{id:"Tile 1", src:"assets/tile.png"},
 	{id:"Tile 2", src:"assets/tile2.png"},
-	{id:"Illuminati", src:"assets/illuminati.png"},
+	{id:"illuminati", src:"assets/illuminati.png"},
 	]);
 	
 }
+//object class
+
+Enemy = function(imagein, xPT, yPT, special, position){
+	this.xP = xPT;
+	this.yP = yPT;
+	this.upright = position;
+	console.log("New enemy");
+	this.image = new createjs.Bitmap(queue.getResult(imagein));
+	this.image.x = x*(100/2); this.image.y = y*88;
+	this.ability = null;
+}
+
 
 function handleComplete(event) {
 	
@@ -79,16 +93,19 @@ function handleComplete(event) {
 	}
 	}
 	
-	//Create illuminati
-	illuminati = new createjs.Bitmap(queue.getResult("Illuminati"));
-	illuminati.x = x*(100/2); illuminati.y = y*88;
-
+	//Create doge
+	doge = new createjs.Bitmap(queue.getResult("illuminati"));
+	doge.x = x*(100/2); doge.y = y*88;
+	//enemies
+	//drEvil = new createjs.Bitmap(queue.getResult("illuminati"));
+	//drEvil.x = x*(100/2); drEvil.y = y*88;
+	drEvil = new Enemy("illuminati", 0, 0, null, true);
 	stage.addChild(bg);
 	for (var i = 0; i < tiles.length; i++) {
 		stage.addChild(tiles[i]);
 	}
-	stage.addChild(illuminati);
-	stage.addChild(ball);
+	stage.addChild(doge);
+	stage.addChild(drEvil.image);
 
 }
 
@@ -102,16 +119,53 @@ function move(direction) {
 	}
 	
 	if (direction == "left") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({x:illuminati.x - (100/2)}, 1000).call(handleComplete);
+		if(upright){
+		createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x - (100/2), y:doge.y + 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
+		upright = false;
+		Enemy.ai();
+		}
+		else{
+			createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x - (100/2), y:doge.y - 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
+			upright = true;
+			Enemy.ai();
+		}
 	}
 	else if (direction == "right") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({x:illuminati.x + (100/2)}, 1000).call(handleComplete);
+		if(upright){
+			createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x + (100/2), y:doge.y + 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
+			upright = false;
+			Enemy.ai();
+		}
+		else{
+			createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x + (100/2), y:doge.y - 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
+			upright = true;
+			Enemy.ai();
+		}
 	}
 	else if (direction == "up") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({y:illuminati.y - 88, scaleY:-illuminati.scaleY}, 1000).call(handleComplete);
+		if(upright){
+			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y}, 0).call(handleComplete);
+			Enemy.ai();
+			//upright = false;
+		}
+		else{
+			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y - 176, scaleY:-doge.scaleY}, 500).call(handleComplete);
+			upright = true;
+			Enemy.ai();
+		}
+		
 	}
 	else if (direction == "down") {
-		createjs.Tween.get(illuminati, {loop:false, override:true}).to({y:illuminati.y + 88, scaleY:-illuminati.scaleY}, 1000).call(handleComplete);
+		if(upright){
+			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y + 176, scaleY:-doge.scaleY}, 500).call(handleComplete);
+			upright = false;
+			Enemy.ai();
+		}
+		else{
+			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y}, 0).call(handleComplete);
+			Enemy.ai();
+			//upright = true;
+		}
 	}
 	
 	}
@@ -134,4 +188,52 @@ function keyUpHandler(e) {
 
 }
 
+Enemy.ai = function(){
+	drEvil.move();
+}
 
+Enemy.prototype.move = function(){
+	var numR = Math.round(((Math.random() * 3) + 1));
+	if (numR == 1) {
+		if(drEvil.upright){
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP - (100/2), y:drEvil.yP + 88, scaleY:-drEvil.scaleY}, 500);
+			drEvil.upright = false;
+		}
+		else{
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP - (100/2), y:drEvil.yP - 88, scaleY:-drEvil.scaleY}, 500);
+			drEvil.upright = true;
+		}
+	}
+	else if (numR == 2) {
+		if(drEvil.upright){
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP + (100/2), y:drEvil.yP + 88, scaleY:-drEvil.scaleY}, 500);
+			drEvil.upright = false;
+		}
+		else{
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP + (100/2), y:drEvil.yP - 88, scaleY:-drEvil.scaleY}, 500);
+			drEvil.upright = true;
+		}
+	}
+	else if (numR == 3) {
+		if(drEvil.upright){
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({y:drEvil.yP}, 0).call(handleComplete);
+			//upright = false;
+		}
+		else{
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({y:drEvil.yP - 176, scaleY:-drEvil.scaleY}, 500);
+			drEvil.upright = true;
+		}
+		
+	}
+	else if (numR == 4) {
+		if(drEvil.upright){
+			createjs.Tween.get(drEvil, {loop:false, override:true}).to({y:drEvil.yP + 176, scaleY:-drEvil.scaleY}, 500);
+			drEvil.upright = false;
+		}
+		else{
+			createjs.Tween.get(drEvil.image, {loop:false, override:true}).to({y:drEvil.yP}, 0).call(handleComplete);
+			//upright = true;
+		}
+	}
+	
+}
