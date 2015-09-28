@@ -12,12 +12,20 @@ var map = [ //max: rows = 8; columns = 11;
 ["."," "," "," ",".",".",".",".",".",".","."]
 ];
 
-var x = 0;
-var y = 0;
+var enemyMap = [ //max: rows = 8; columns = 11;
+[" "," "," "," "," "," "," "," "," "," "," "],
+[" "," "," "," "," "," "," "," "," "," "," "],
+[" "," "," "," "," "," "," "," "," "," "," "],
+[" "," "," "," "," "," "," "," "," "," "," "],
+[" ",".",".","."," "," "," "," "," "," "," "],
+[" "," "," "," "," "," "," "," "," "," "," "],
+[" "," "," "," "," "," "," "," "," "," "," "],
+[" "," "," "," "," "," "," "," "," "," "," "]
+];
+
 var doge;
-var moving = false;
-var upright = true;
-var drEvil;
+var canType = true; //No user input allowed during AI movement
+var illuminatis = [];
 
  var KEYCODE_LEFT = 37,
    KEYCODE_RIGHT = 39,
@@ -38,22 +46,11 @@ function init() {
 	{id:"Background", src:"assets/puzzlebg.jpg"},
 	{id:"Tile 1", src:"assets/tile.png"},
 	{id:"Tile 2", src:"assets/tile2.png"},
-	{id:"illuminati", src:"assets/illuminati.png"},
+	{id:"illuminati", src:"assets/infinati.png"},
+	{id:"Doge", src:"assets/doge.png"},
 	]);
 	
 }
-//object class
-
-Enemy = function(imagein, xPT, yPT, special, position){
-	this.xP = xPT;
-	this.yP = yPT;
-	this.upright = position;
-	console.log("New enemy");
-	this.image = new createjs.Bitmap(queue.getResult(imagein));
-	this.image.x = x*(100/2); this.image.y = y*88;
-	this.ability = null;
-}
-
 
 function handleComplete(event) {
 	
@@ -62,12 +59,7 @@ function handleComplete(event) {
 	
 	console.log(stage.width + ", " + stage.height);
 	createjs.Sound.play("Music");
-	var ball = new createjs.Shape();
-	ball.graphics.beginFill("#FF0000").drawCircle(0,0,50);
-	ball.x = 50;
-	ball.y = 200;
-	
-	createjs.Tween.get(ball, {loop:true}).to({x:450}, 3000).to({x:50}, 3000);
+
 	createjs.Ticker.addEventListener("tick", tick);
 	
 	
@@ -94,146 +86,78 @@ function handleComplete(event) {
 	}
 	
 	//Create doge
-	doge = new createjs.Bitmap(queue.getResult("illuminati"));
-	doge.x = x*(100/2); doge.y = y*88;
-	//enemies
-	//drEvil = new createjs.Bitmap(queue.getResult("illuminati"));
-	//drEvil.x = x*(100/2); drEvil.y = y*88;
-	drEvil = new Enemy("illuminati", 0, 0, null, true);
+	doge = new Doge(2,3,true);
+	if (doge.x%2 != doge.y%2) {
+		doge.upright = false
+	}
+	
+	//Enemies
+	for (var row = 0; row < 8; row++) {
+	for (var col = 0; col < 11; col++) {
+		
+		if (enemyMap[row][col] == ".") {
+			if (col%2 == row%2) {
+				//Right side up
+				var enemy = new Enemy("illuminati", row, col, null, true);
+				illuminatis.push(enemy);
+			}
+			else {
+				//Up side down
+				var enemy = new Enemy("illuminati", row, col, null, false);
+				enemy.image.y = (enemy.y+1)*88;
+				enemy.image.scaleY = -1;
+				illuminatis.push(enemy);
+			}
+		}
+	}
+	}
+	
+	
+	//Add all 'actors' to the stage
 	stage.addChild(bg);
 	for (var i = 0; i < tiles.length; i++) {
 		stage.addChild(tiles[i]);
 	}
-	stage.addChild(doge);
-	stage.addChild(drEvil.image);
+	for (var i = 0; i < illuminatis.length; i++) {
+		illuminatis[i].name = "Illuminati " + i;
+		stage.addChild(illuminatis[i].image);
+	}
+	stage.addChild(doge.image);
 
 }
 
-function move(direction) {
 
-	if (!moving) {
-		moving = true;
-	
-	function handleComplete() {
-		moving = false;
-	}
-	
-	if (direction == "left") {
-		if(upright){
-		createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x - (100/2), y:doge.y + 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
-		upright = false;
-		Enemy.ai();
-		}
-		else{
-			createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x - (100/2), y:doge.y - 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
-			upright = true;
-			Enemy.ai();
-		}
-	}
-	else if (direction == "right") {
-		if(upright){
-			createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x + (100/2), y:doge.y + 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
-			upright = false;
-			Enemy.ai();
-		}
-		else{
-			createjs.Tween.get(doge, {loop:false, override:true}).to({x:doge.x + (100/2), y:doge.y - 88, scaleY:-doge.scaleY}, 500).call(handleComplete);
-			upright = true;
-			Enemy.ai();
-		}
-	}
-	else if (direction == "up") {
-		if(upright){
-			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y}, 0).call(handleComplete);
-			Enemy.ai();
-			//upright = false;
-		}
-		else{
-			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y - 176, scaleY:-doge.scaleY}, 500).call(handleComplete);
-			upright = true;
-			Enemy.ai();
-		}
+
+function ai() {
+	canType = false;
+	for (var i = 0; i < illuminatis.length; i++) {
+		if (i == illuminatis.length-1) 
+			illuminatis[i].next = null;
+		else 
+			illuminatis[i].next = illuminatis[i+1];
 		
 	}
-	else if (direction == "down") {
-		if(upright){
-			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y + 176, scaleY:-doge.scaleY}, 500).call(handleComplete);
-			upright = false;
-			Enemy.ai();
-		}
-		else{
-			createjs.Tween.get(doge, {loop:false, override:true}).to({y:doge.y}, 0).call(handleComplete);
-			Enemy.ai();
-			//upright = true;
-		}
-	}
-	
-	}
-}
+	illuminatis[0].ai();
 
+}
 
 function tick(event) {
 	stage.update();
 }
 
 function keyUpHandler(e) {
-
-   switch(e.keyCode)
-   {
-    case KEYCODE_LEFT:  move("left"); break;
-    case KEYCODE_RIGHT: move("right"); break;
-    case KEYCODE_UP:    move("up"); break;
-    case KEYCODE_DOWN:  move("down"); break;
-   } 
-
-}
-
-Enemy.ai = function(){
-	drEvil.move();
-}
-
-Enemy.prototype.move = function(){
-	var numR = Math.round(((Math.random() * 3) + 1));
-	if (numR == 1) {
-		if(drEvil.upright){
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP - (100/2), y:drEvil.yP + 88, scaleY:-drEvil.scaleY}, 500);
-			drEvil.upright = false;
-		}
-		else{
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP - (100/2), y:drEvil.yP - 88, scaleY:-drEvil.scaleY}, 500);
-			drEvil.upright = true;
-		}
-	}
-	else if (numR == 2) {
-		if(drEvil.upright){
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP + (100/2), y:drEvil.yP + 88, scaleY:-drEvil.scaleY}, 500);
-			drEvil.upright = false;
-		}
-		else{
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({x:drEvil.xP + (100/2), y:drEvil.yP - 88, scaleY:-drEvil.scaleY}, 500);
-			drEvil.upright = true;
-		}
-	}
-	else if (numR == 3) {
-		if(drEvil.upright){
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({y:drEvil.yP}, 0).call(handleComplete);
-			//upright = false;
-		}
-		else{
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({y:drEvil.yP - 176, scaleY:-drEvil.scaleY}, 500);
-			drEvil.upright = true;
-		}
-		
-	}
-	else if (numR == 4) {
-		if(drEvil.upright){
-			createjs.Tween.get(drEvil, {loop:false, override:true}).to({y:drEvil.yP + 176, scaleY:-drEvil.scaleY}, 500);
-			drEvil.upright = false;
-		}
-		else{
-			createjs.Tween.get(drEvil.image, {loop:false, override:true}).to({y:drEvil.yP}, 0).call(handleComplete);
-			//upright = true;
-		}
-	}
 	
+	if (canType) {
+	   switch(e.keyCode)
+	   {
+		case KEYCODE_LEFT:  doge.move("left"); break;
+		case KEYCODE_RIGHT: doge.move("right"); break;
+		case KEYCODE_UP:    doge.move("up"); break;
+		case KEYCODE_DOWN:  doge.move("down"); break;
+	   } 
+   }
+
 }
+
+
+
